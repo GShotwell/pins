@@ -1,7 +1,7 @@
 Package: pins
 Type: Package
 Title: Pin, Discover and Share Resources
-Version: 0.3.1
+Version: 0.4.2.9000
 Authors@R: c(
     person("Javier", "Luraschi", email = "javier@rstudio.com", role = c("aut", "cre")),
     person(family = "RStudio", role = c("cph"))
@@ -14,12 +14,15 @@ Description: Pin remote resources into a local cache to work offline,
 License: Apache License 2.0
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1
 Depends: 
   R (>= 3.2.0)
 Imports:
+  backports,
   base64enc,
   crayon,
+  digest,
+  filelock,
   httr,
   jsonlite,
   magrittr,
@@ -30,10 +33,16 @@ Imports:
   yaml,
   zip
 Suggests:
+  callr,
+  covr,
+  data.table,
   knitr,
   rmarkdown,
   R6,
-  testthat
+  stringi,
+  tibble,
+  testthat,
+  xml2
 VignetteBuilder: knitr
 URL: https://github.com/rstudio/pins
 BugReports: https://github.com/rstudio/pins/issues

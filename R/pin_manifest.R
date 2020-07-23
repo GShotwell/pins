@@ -3,12 +3,24 @@ pin_manifest_get <- function(path) {
 
   data_txt <- file.path(path, "data.txt")
   if (file.exists(data_txt)) {
-    manifest <- yaml::read_yaml(data_txt, eval.expr = FALSE)
+    manifest <- suppressWarnings(yaml::read_yaml(data_txt, eval.expr = FALSE))
   }
 
   if (is.null(manifest$type)) manifest$type <- "files"
 
   manifest
+}
+
+pin_manifest_update <- function(path, manifest) {
+  data_txt <- file.path(path, "data.txt")
+
+  manifest <- yaml::write_yaml(manifest, data_txt)
+
+  manifest
+}
+
+pin_manifest_exists <- function(path) {
+  identical(file.exists(file.path(path, "data.txt")), TRUE)
 }
 
 pin_manifest_create <- function(path, metadata, files) {

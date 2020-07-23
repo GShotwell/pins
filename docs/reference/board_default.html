@@ -78,7 +78,7 @@ configured with the pins.board option." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">pins</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.2</span>
       </span>
     </div>
 
@@ -110,6 +110,9 @@ configured with the pins.board option." />
       <a href="../articles/boards-azure.html">Azure</a>
     </li>
     <li>
+      <a href="../articles/boards-dospace.html">DigitalOcean</a>
+    </li>
+    <li>
       <a href="../articles/boards-github.html">GitHub</a>
     </li>
     <li>
@@ -126,6 +129,11 @@ configured with the pins.board option." />
     </li>
     <li>
       <a href="../articles/boards-websites.html">Websites</a>
+    </li>
+    <li class="divider"></li>
+    <li class="dropdown-header">Advanced</li>
+    <li>
+      <a href="../articles/advanced-versions.html">Versioning</a>
     </li>
     <li class="divider"></li>
     <li class="dropdown-header">Extensions</li>
@@ -222,7 +230,8 @@ configured with the <code>pins.board</code> option.</p>
 
 <span class='co'># retrieve default board</span>
 <span class='fu'>board_default</span>()</div><div class='output co'>#&gt; [1] "temp"</div><div class='input'>
-</div></pre>
+<span class='co'># revert default board</span>
+<span class='fu'><a href='https://rdrr.io/r/base/options.html'>options</a></span>(<span class='kw'>pins.board</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

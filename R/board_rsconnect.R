@@ -23,8 +23,9 @@ board_initialize.rsconnect <- function(board, ...) {
 
   if (!is.null(args$server)) {
     board$server <-  gsub("/$", "", args$server)
-    board$server_name <- gsub("https?://|:[0-9]+/?|/.*", "", args$server)
+    board$server_name <- gsub("https?://|(:[0-9]+)?/.*", "", args$server)
   }
+
   board$account <- args$account
   board$output_files <- args$output_files
 
@@ -42,10 +43,22 @@ board_initialize.rsconnect <- function(board, ...) {
 
   board$pins_supported <- tryCatch(rsconnect_pins_supported(board), error = function(e) FALSE)
 
+  if (is.null(board$account )) {
+    board$account  <- rsconnect_api_get(board, "/__api__/users/current/")$username
+  }
+
   board
 }
 
-board_pin_create.rsconnect <- function(board, path, name, metadata, ...) {
+board_pin_create.rsconnect <- function(board, path, name, metadata, code = NULL,
+                                      ...) {
+  dots <- list(...)
+  access_type <- if (!is.null(access_type <- dots[["access_type"]])) {
+    match.arg(access_type, c("acl", "logged_in", "all"))
+  } else {
+    NULL
+  }
+
   deps <- rsconnect_dependencies()
 
   temp_dir <- file.path(tempfile(), name)
@@ -55,19 +68,22 @@ board_pin_create.rsconnect <- function(board, path, name, metadata, ...) {
   x <- if (identical(dir(path, "data\\.rds"), "data.rds"))
     readRDS(dir(path, "data\\.rds", full.names = TRUE)) else path
 
+  if (grepl("/", name)) {
+    name_qualified <- name
+    name <- gsub(".*/", "", name_qualified)
+  }
+  else {
+    name_qualified <- paste0(board$account, "/", name)
+  }
+
   account_name <- board$account
   if (identical(board$output_files, TRUE)) {
     account_name <- "https://rstudio-connect-server/content/app-id"
   }
-  else {
-    if (is.null(account_name)) {
-      account_name <- rsconnect_api_get(board, "/__api__/users/current/")$username
-    }
-  }
 
   file.copy(dir(path, full.names = TRUE), temp_dir)
   data_files <- tryCatch({
-    rsconnect_bundle_create(x, temp_dir, name, board, account_name)
+    rsconnect_bundle_create(x, temp_dir, name, board, account_name, retrieve_command = code)
   }, error = function(e) {
     NULL
   })
@@ -91,7 +107,9 @@ board_pin_create.rsconnect <- function(board, path, name, metadata, ...) {
     deps$output_metadata$set(rsc_output_files = file.path(knit_pin_dir, dir(knit_pin_dir, recursive = TRUE)))
   }
   else {
-    existing <- rsconnect_get_by_name(board, name)
+    previous_versions <- NULL
+
+    existing <- rsconnect_get_by_name(board, name_qualified)
     if (nrow(existing) == 0) {
       content <- rsconnect_api_post(board,
                                   paste0("/__api__/v1/experimental/content"),
@@ -102,6 +120,7 @@ board_pin_create.rsconnect <- function(board, path, name, metadata, ...) {
                                     description = board_metadata_to_text(metadata, metadata$description)
                                   ))
       if (!is.null(content$error)) {
+        pin_log("Failed to create pin with name '", name, "'.")
         stop("Failed to create pin: ", content$error)
       }
 
@@ -110,16 +129,23 @@ board_pin_create.rsconnect <- function(board, path, name, metadata, ...) {
     else {
       guid <- existing$guid
 
+      # when versioning is turned off we also need to clean up previous bundles so we store the current versions
+      if (!board_versions_enabled(board, TRUE)) {
+        previous_versions <- board_pin_versions(board, name_qualified)
+      }
+
       content <- rsconnect_api_post(board,
                                     paste0("/__api__/v1/experimental/content/", guid),
                                     list(
                                       app_mode = "static",
                                       content_category = "pin",
                                       name = name,
-                                      description = board_metadata_to_text(metadata, metadata$description)
+                                      description = board_metadata_to_text(metadata, metadata$description),
+                                      access_type = access_type
                                     ))
 
       if (!is.null(content$error)) {
+        pin_log("Failed to update pin with GUID '", guid, "' and name '", name, "'.")
         stop("Failed to create pin: ", content$error)
       }
     }
@@ -172,7 +198,20 @@ board_pin_create.rsconnect <- function(board, path, name, metadata, ...) {
     }
 
     # it might take a few seconds for the pin to register in rsc, see travis failures, wait 5s
-    rsconnect_wait_by_name(board, name)
+    result <- rsconnect_wait_by_name(board, name_qualified)
+
+    # when versioning is turned off we also need to clean up previous bundles
+    if (!board_versions_enabled(board, TRUE) && !is.null(previous_versions)) {
+      for (idx in 1:nrow(previous_versions)) {
+        delete_version <- previous_versions[idx,]
+
+        delete_path <- paste0("/__api__/v1/experimental/bundles/", delete_version$version)
+        pin_log("Deleting previous version ", delete_path)
+        rsconnect_api_delete(board, delete_path)
+      }
+    }
+
+    result
   }
 }
 
@@ -181,6 +220,7 @@ board_pin_find.rsconnect <- function(board,
                                      name = NULL,
                                      all_content = FALSE,
                                      extended = FALSE,
+                                     metadata = FALSE,
                                      ...) {
   if (is.null(text)) text <- ""
   if (!is.null(name)) text <- pin_content_name(name)
@@ -200,9 +240,6 @@ board_pin_find.rsconnect <- function(board,
     entries <- Filter(function(e) grepl(name_pattern, e$name), entries)
   }
 
-  if (identical(extended, TRUE))
-    return(pin_entries_to_dataframe(entries))
-
   results <- pin_results_from_rows(entries)
 
   if (nrow(results) == 0) {
@@ -215,7 +252,7 @@ board_pin_find.rsconnect <- function(board,
   results$name <- as.character(results$name)
   results$type <- unname(sapply(results$description, function(e) null_or_value(board_metadata_from_text(e)$type, "files")))
 
-  if (!identical(extended, TRUE)) {
+  if (identical(metadata, TRUE)) {
     results$metadata <- sapply(results$description, function(e) as.character(jsonlite::toJSON(board_metadata_from_text(e), auto_unbox = TRUE)))
   }
 
@@ -226,13 +263,21 @@ board_pin_find.rsconnect <- function(board,
     remote_path <- rsconnect_remote_path_from_url(board, entries[[1]]$url)
     etag <- as.character(entries[[1]]$last_deployed_time)
 
-    local_path <- rsconnect_api_download(board, entries[[1]]$name, file.path(remote_path, "data.txt"), etag = etag)
-    manifest <- pin_manifest_get(local_path)
+    manifest <- list()
+    if (identical(metadata, TRUE)) {
+      local_path <- rsconnect_api_download(board, entries[[1]]$name, file.path(remote_path, "data.txt"), etag = etag)
+      manifest <- pin_manifest_get(local_path)
+    }
 
-    manifest <- c(entries[[1]], manifest)
+    if (identical(extended, TRUE)) {
+      manifest <- c(entries[[1]], manifest)
+    }
 
     results$type <- manifest$type
-    results$metadata <- as.character(jsonlite::toJSON(manifest, auto_unbox = TRUE))
+
+    if (identical(metadata, TRUE)) {
+      results$metadata <- as.character(jsonlite::toJSON(manifest, auto_unbox = TRUE))
+    }
   }
 
   results
@@ -247,11 +292,15 @@ rsconnect_get_by_name <- function(board, name) {
   details <- pin_results_extract_column(details, "guid")
 
   if (nrow(details) > 1) {
-    details <- details[details$owner_username == board$account,]
+    owner_details <- details[details$owner_username == board$account,]
+    if (nrow(owner_details) == 1) {
+      details <- owner_details
+    }
   }
 
   if (nrow(details) > 1) {
-    stop("Multiple pins named '", name, "' in board '", board$name, "'")
+    stop("Multiple pins named '", name, "' in board '", board$name,
+         "', choose from: ", paste0("'", paste0(details$name, collapse = "', '"), "'."))
   }
 
   details
@@ -270,7 +319,7 @@ rsconnect_remote_path_from_url <- function(board, url) {
   gsub("/$", "", url)
 }
 
-board_pin_get.rsconnect <- function(board, name, ...) {
+board_pin_get.rsconnect <- function(board, name, version = NULL, ...) {
   url <- name
 
   if (identical(board$output_files, TRUE)) {
@@ -287,12 +336,18 @@ board_pin_get.rsconnect <- function(board, name, ...) {
   }
 
   remote_path <- rsconnect_remote_path_from_url(board, url)
+  download_name <- name
 
-  local_path <- rsconnect_api_download(board, name, file.path(remote_path, "data.txt"), etag = etag)
+  if (!is.null(version)) {
+    remote_path <- paste0(remote_path, "/_rev", version)
+    download_name <- file.path(name, pin_versions_path_name(), version)
+  }
+
+  local_path <- rsconnect_api_download(board, download_name, file.path(remote_path, "data.txt"), etag = etag)
   manifest_paths <- pin_manifest_download(local_path)
 
   for (file in manifest_paths) {
-    rsconnect_api_download(board, name, file.path(remote_path, file), etag = etag)
+    rsconnect_api_download(board, download_name, file.path(remote_path, file), etag = etag)
   }
 
   unlink(dir(local_path, "index\\.html$|pagedtable-1\\.1$", full.names = TRUE))
@@ -310,3 +365,20 @@ board_pin_remove.rsconnect <- function(board, name) {
 board_browse.rsconnect <- function(board) {
   utils::browseURL(board$server)
 }
+
+board_pin_versions.rsconnect <- function(board, name) {
+  details <- rsconnect_get_by_name(board, name)
+  if (nrow(details) == 0) stop("The pin '", name, "' is not available in the '", board$name, "' board.")
+
+  details$guid
+
+  bundles <- rsconnect_api_get(board, paste0("/__api__/v1/experimental/content/", details$guid, "/bundles/"))
+
+  data.frame(
+    version = sapply(bundles$results, function(e) e$id),
+    created = sapply(bundles$results, function(e) e$created_time),
+    size = sapply(bundles$results, function(e) e$size),
+    stringsAsFactors = FALSE) %>%
+    format_tibble()
+}
+

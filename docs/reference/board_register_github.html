@@ -78,7 +78,7 @@ register a GitHub repo as a board." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">pins</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.3.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.4.2</span>
       </span>
     </div>
 
@@ -110,6 +110,9 @@ register a GitHub repo as a board." />
       <a href="../articles/boards-azure.html">Azure</a>
     </li>
     <li>
+      <a href="../articles/boards-dospace.html">DigitalOcean</a>
+    </li>
+    <li>
       <a href="../articles/boards-github.html">GitHub</a>
     </li>
     <li>
@@ -126,6 +129,11 @@ register a GitHub repo as a board." />
     </li>
     <li>
       <a href="../articles/boards-websites.html">Websites</a>
+    </li>
+    <li class="divider"></li>
+    <li class="dropdown-header">Advanced</li>
+    <li>
+      <a href="../articles/advanced-versions.html">Versioning</a>
     </li>
     <li class="divider"></li>
     <li class="dropdown-header">Extensions</li>
@@ -209,7 +217,7 @@ register a GitHub repo as a board.</p>
 
     <pre class="usage"><span class='fu'>board_register_github</span>(<span class='kw'>name</span> <span class='kw'>=</span> <span class='st'>"github"</span>, <span class='kw'>repo</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>branch</span> <span class='kw'>=</span> <span class='st'>"master"</span>, <span class='kw'>token</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>path</span> <span class='kw'>=</span> <span class='st'>""</span>,
-  <span class='kw'>cache</span> <span class='kw'>=</span> <span class='fu'><a href='board_cache_path.html'>board_cache_path</a></span>(), <span class='no'>...</span>)</pre>
+  <span class='kw'>host</span> <span class='kw'>=</span> <span class='st'>"https://api.github.com"</span>, <span class='kw'>cache</span> <span class='kw'>=</span> <span class='fu'><a href='board_cache_path.html'>board_cache_path</a></span>(), <span class='no'>...</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -236,6 +244,10 @@ register a GitHub repo as a board.</p>
       <td><p>The subdirectory in the repo where the pins will be stored.</p></td>
     </tr>
     <tr>
+      <th>host</th>
+      <td><p>The URL hosting the GitHub API, defaults to <code>"https://api.github.com"</code>.</p></td>
+    </tr>
+    <tr>
       <th>cache</th>
       <td><p>The local folder to use as a cache, defaults to <code><a href='board_cache_path.html'>board_cache_path()</a></code>.</p></td>
     </tr>
@@ -253,6 +265,8 @@ registering a GitHub board will fail.</p>
 they support up to 2GB file uploads. This threshold can be configured through
 the <code>pins.github.release</code> option which is specified in megabytes and
 defaults to <code>25</code>.</p>
+<p>When using GitHub Enterprise, consider customizing the <code>host</code> parameter to
+<code>"https://yourhostname/api/v3"</code>.</p>
     
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 

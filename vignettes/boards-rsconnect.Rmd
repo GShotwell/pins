@@ -149,20 +149,28 @@ You can share pins with others in RStudio Connect, by changing the viewers of th
 
 Once you share this pin with specific users, they can follow the same steps to register their RStudio Connect board, to download this pin.
 
-### Modifying pins front matter
+### Public
 
-When you share a pin on RStudio Connect, the user will see instructions for getting the pin from R or Python as well as the first few rows of the dataset. This material is provided by the pins package based on an html template. The template can be modified in a few steps: 
+You can also choose to share a pin publicly and avoid having to register the RStudio Connect board to retrieve this pin.
 
-1) Locate the file with `system.file("views/data/index.html", package = "pins")`
-1) Copy the file to a new location and make any changes to it
-1) Set the file path as an option using `Sys.setenv(RSCONNECT_HTML_PATH = <your index>)`
-1) Pin a dataset normally
+To create a public pin, first publish a pin and navigate to RStudio Connect; then set the "Access" to "Anyone - no login required" -- The pin will become public and accessible to anyone using their content URL. The remote resource stored in RStudio Connect can then be cached locally with `pin()` as follows:
+
+```{r eval=FALSE}
+pin("https://rstudio-connect-server/content/1234", name = "my-rsc-content")
+```
+
+To avoid having to manually change the "Access" manually, you can also set the `access_type` to `acl`, `loggend_in` or `all` when creating a pin:
+
+```{r eval=FALSE}
+# create a publicly visible pin
+pin("https://rstudio-connect-server/content/1234", name = "my-rsc-content", access_type = "all")
+```
 
 ## Automation
 
 One significant advantage from using RStudio Connect over other boards is its ability to schedule R Markdown reports to run automatically. This allows you to automate the creation of pins and also consume pins published manually from automated reports.
 
-To support automation you need to use an [RStudio Connect API Key](https://docs.rstudio.com/connect/user/api-keys.html) as your authentication method. Therefore, the first step is to create an API Key, once created, you will need to register the board as follows:
+To support automation you need to use an [RStudio Connect API Key](https://docs.rstudio.com/connect/user/api-keys/) as your authentication method. Therefore, the first step is to create an API Key, once created, you will need to register the board as follows:
 
 ```{r eval=FALSE}
 board_register_rsconnect(key = "the-rstudio-connect-api-key",
@@ -199,5 +207,14 @@ Which you can then share as a pin,
 pin(world_news, "worldnews", board = "rsconnect")
 ```
 ````
+
+## Customizing
+
+A pin is displayed in RStudio Connect with an auto-generated page showcasing instructions for getting the pin and a preview of the dataset, this page can be customized as follows: 
+
+1) Locate the file with `system.file("views/data/index.html", package = "pins")`
+1) Copy the file to a new location and make any changes to it.
+1) Set the file path as an option using `Sys.setenv(RSCONNECT_HTML_PATH = <your index>)`.
+1) Pin a dataset normally,
 
 Please note that experimental support for `pins` was introduced in RStudio Connect 1.7.8.

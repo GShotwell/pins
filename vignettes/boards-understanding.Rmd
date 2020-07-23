@@ -34,6 +34,9 @@ A local board is quite useful for all the reasons mentioned in the [Getting Star
 Azure
 : [Azure](https://azure.microsoft.com) is a cloud computing service created by Microsoft for building, testing, deploying, and managing applications and services through Microsoft-managed data centers. Azure provides storage services for storing and accessing data on the cloud. You can learn more about using `pins` with Azure in the [Azure Board](boards-azure.html) article.
 
+DigitalOcean
+: [DigitalOcean](https://digitalocean.com) is an American cloud infrastructure provider with data centers worldwide. DigitalOcean Spaces is an S3-compatible object storage service that lets you store and serve large amounts of data.  You can learn more aboaut using `pins` with DigitalOcean in the [DigitalOcean Board](boards-dospace.html) article.
+
 GitHub
 : [GitHub](https://github.com) is an American company that provides hosting for software development version control using Git and a subsidiary of Microsoft. GitHub offers plans for free, professional, and enterprise accounts; but free accounts are commonly used to host open source projects. While GitHub is mostly known to be used as a code repository, it is a common practice to also use GitHub to store datasets. However, GitHub works best with datasets under [25MB](https://help.github.com/en/articles/adding-a-file-to-a-repository) before workarounds like [Git LFS](https://git-lfs.github.com/) and [release files](https://help.github.com/en/articles/distributing-large-binaries) to support up to 2GB resources. You can learn more about using `pins` with GitHub in the [GitHub Board](boards-github.html) article.
 
@@ -54,7 +57,7 @@ However, since there are many more storage locations to consider (see for instan
 For instance, there are various ongoing projects to implement additional boards:
 
 Databases
-: A [database](https://en.wikipedia.org/wiki/Database) is an organized collection of data, generally stored and accessed electronically from a computer system. Where databases are more complex they are often developed using formal design and modeling techniques. In R, packages like [DBI](https://CRAN.R-project.org/package=DBI) and [odbc](https://CRAN.R-project.org/package=odbc) allow you to connect to many different databases. The [connections](https://edgararuiz.github.io/connections/) package integrates DBI-compliant packages with the RStudio IDE’s Connection Pane and **experimental** support for pins.
+: A [database](https://en.wikipedia.org/wiki/Database) is an organized collection of data, generally stored and accessed electronically from a computer system. Where databases are more complex they are often developed using formal design and modeling techniques. In R, packages like [DBI](https://CRAN.R-project.org/package=DBI) and [odbc](https://CRAN.R-project.org/package=odbc) allow you to connect to many different databases. The [connections](https://rstudio.github.io/connections/) package integrates DBI-compliant packages with the RStudio IDE’s Connection Pane and **experimental** support for pins.
 
 Nextcloud
 : [Nextcloud](https://nextcloud.com/) is a suite of client-server software for creating and using file hosting services. Nextcloud application functionally is similar to Dropbox. Unlike Dropbox, Nextcloud does not offer off-premises file storage hosting. Nextcloud is free and open-source, which means that anyone is allowed to install and operate it on their own private server devices. The [nextcloudr](https://gitlab.com/gwmngilfen/nextcloudr) package provides an interface to Nextcloud and **experimental** support for pins.

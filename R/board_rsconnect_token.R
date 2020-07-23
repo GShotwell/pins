@@ -37,19 +37,22 @@ rsconnect_token_initialize <- function(board) {
 
   if (is.null(board$server)) {
     board$server_name <- accounts$server[1]
-    board$server <- gsub("/__api__", "", deps$server_info(board$server_name)$url)
   }
 
   if (is.null(board$account)) board$account <- accounts[accounts$server == board$server_name,]$name
 
+  if (length(board$account) != 1) {
+    stop("Multiple accounts (", paste(board$account, collapse = ", "), ") are associated to this server, please specify the correct account parameter in board_register().")
+  }
+
+  # always use the url from rstudio to ensure redirects work properly even when the full path is not specified
+  board$server <- gsub("/__api__", "", deps$server_info(board$server_name)$url)
+
   board
 }
 
-rsconnect_token_headers <- function(board, path, verb, content) {
+rsconnect_token_headers <- function(board, url, verb, content) {
   deps <- rsconnect_token_dependencies()
-
-  server_info <- deps$server_info(board$server_name)
-  service <- rsconnect_token_parse_url(server_info$url)
 
   account_info <- deps$account_info(board$account, board$server_name)
 
@@ -64,7 +67,7 @@ rsconnect_token_headers <- function(board, path, verb, content) {
     writeChar(content, content_file,  eos = NULL, useBytes = TRUE)
   }
 
-  deps$signature_headers(account_info, verb, paste0(service$path_sans_api, path), content_file)
+  deps$signature_headers(account_info, verb, url, content_file)
 }
 
 rsconnect_token_post <- function(board, path, content, encode) {
@@ -89,7 +92,7 @@ rsconnect_token_post <- function(board, path, content, encode) {
                                  parsed$port,
                                  "POST",
                                  paste0(parsed$path_sans_api, path),
-                                 rsconnect_token_headers(board, path, "POST", content),
+                                 rsconnect_token_headers(board, rsconnect_url_from_path(board, path), "POST", content),
                                  content_type,
                                  content_file)
 

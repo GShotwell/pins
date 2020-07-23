@@ -61,20 +61,17 @@ library(pins)
 pin_find("boston housing")
 ```
 ```
-# A tibble: 18,695 x 4
-   name                         description                                     type  board   
-   <chr>                        <chr>                                           <chr> <chr>   
- 1 A3/housing                   Boston Housing Prices from A3 package.          table packages
- 2 A3/multifunctionality        Boston Housing Prices from A3 package.          table packages
- 3 abc.data/musigma2            Boston Housing Prices from abc.data package.    table packages
- 4 abc.data/ppc                 Boston Housing Prices from abc.data package.    table packages
- 5 ABC.RAP/annotation_file      Boston Housing Prices from ABC.RAP package.     table packages
- 6 ABC.RAP/nonspecific_probes   Boston Housing Prices from ABC.RAP package.     table packages
- 7 ABC.RAP/test_data            Boston Housing Prices from ABC.RAP package.     table packages
- 8 ABCanalysis/SwissInhabitants Boston Housing Prices from ABCanalysis package. table packages
- 9 ABCp2/fungus                 Boston Housing Prices from ABCp2 package.       table packages
-10 ABCp2/newt                   Boston Housing Prices from ABCp2 package.       table packages
-# … with 18,685 more rows
+# A tibble: 8 x 4
+  name                  description                                            type  board  
+  <chr>                 <chr>                                                  <chr> <chr>  
+1 A3/housing            Boston Housing Prices from A3 package.                 table packag…
+2 BiDAG/Boston          Boston housing data from BiDAG package.                table packag…
+3 GSE/boston            Boston Housing Data from GSE package.                  table packag…
+4 KernelKnn/Boston      Boston Housing Data (Regression) from KernelKnn packa… table packag…
+5 mlbench/BostonHousing Boston Housing Data from mlbench package.              table packag…
+6 pdp/boston            Boston Housing Data from pdp package.                  table packag…
+7 spData/boston         Corrected Boston Housing Data from spData package.     table packag…
+8 spikeslab/housingI    Boston Housing Interaction Data from spikeslab packag… table packag…
 ```
 
 We've found out that the `BSDA` package contains a `Housing` dataset, you can then retrieve this dataset using `pin_get()` as follows:
@@ -106,7 +103,7 @@ Most datasets in CRAN contain rectangular data, which `pins` knows to load as a 
 Let's suppose that the 'home prices' dataset is not exactly what we are looking for, we can try to search online for 'home prices' and find out that [catalog.data.gov](https://catalog.data.gov/) contains a more suitable [FHFA House Price Indexes](https://catalog.data.gov/dataset/fhfa-house-price-indexes-hpis) dataset. Instead of giving users explicit instructions to download the CSV file, we can instead use `pin()` to cache this dataset locally:
 
 ```{r eval=FALSE}
-pin("http://www.fhfa.gov/DataTools/Downloads/Documents/HPI/HPI_master.csv")
+pin("http://www.fhfa.gov/datatools/downloads/documents/hpi/hpi_master.csv")
 ```
 ```
 [1] "/Users/username/Library/Caches/pins/local/HPI_master/HPI_master.csv"
@@ -116,7 +113,7 @@ Notice that the pin returns a path to a local CSV file, which you are free to lo
 
 ```{r eval=FALSE}
 library(readr)
-pin("http://www.fhfa.gov/DataTools/Downloads/Documents/HPI/HPI_master.csv") %>%
+pin("http://www.fhfa.gov/datatools/downloads/documents/hpi/hpi_master.csv") %>%
   read_csv(col_types = cols())
 ```
 ```
@@ -141,7 +138,7 @@ The `pins` package tries to be smart about downloading files only when the file 
 Notice that `pin()` assigned a name automatically, `HPI_master` for the previous example; however, you can choose your own name and be explicit about retrieving a pin with `pin_get()`:
 
 ```{r eval=FALSE}
-pin("http://www.fhfa.gov/DataTools/Downloads/Documents/HPI/HPI_master.csv",
+pin("http://www.fhfa.gov/datatools/downloads/documents/hpi/hpi_master.csv",
     name = "home_price_indexes")
 
 pin_get("home_price_indexes") %>%

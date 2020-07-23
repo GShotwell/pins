@@ -9,7 +9,11 @@
 #' board_cache_path()
 #' @export
 board_cache_path <- function() {
-  getOption("pins.path", rappdirs::user_cache_dir("pins"))
+  # if a configuration is present this could mean we are running in a production environment without user caches
+  if (nchar(Sys.getenv("R_CONFIG_ACTIVE")) > 0 && nchar(Sys.getenv("PINS_USE_CACHE")) == 0)
+    tempfile()
+  else
+    getOption("pins.path", rappdirs::user_cache_dir("pins"))
 }
 
 #' Register Local Board
@@ -46,6 +50,7 @@ board_register_local <- function(name = "local",
 #' @param branch The branch to use when commiting pins.
 #' @param token Token to use when \code{GITHUB_PAT} is not specified.
 #' @param path The subdirectory in the repo where the pins will be stored.
+#' @param host The URL hosting the GitHub API, defaults to \code{"https://api.github.com"}.
 #' @param cache The local folder to use as a cache, defaults to \code{board_cache_path()}.
 #' @param ... Additional parameters required to initialize a particular board.
 #'
@@ -58,6 +63,9 @@ board_register_local <- function(name = "local",
 #' they support up to 2GB file uploads. This threshold can be configured through
 #' the \code{pins.github.release} option which is specified in megabytes and
 #' defaults to \code{25}.
+#'
+#' When using GitHub Enterprise, consider customizing the \code{host} parameter to
+#' \code{"https://yourhostname/api/v3"}.
 #'
 #' @seealso board_register
 #'
@@ -72,6 +80,7 @@ board_register_github <- function(name = "github",
                                   branch = "master",
                                   token = NULL,
                                   path = "",
+                                  host = "https://api.github.com",
                                   cache = board_cache_path(),
                                   ...) {
   board_register("github", name = name,
@@ -80,6 +89,7 @@ board_register_github <- function(name = "github",
                            token = token,
                            path = path,
                            cache = cache,
+                           host = host,
                            ...)
 }
 
@@ -215,6 +225,7 @@ board_register_datatxt <- function(url,
 #' @param secret The secret of the Amazon S3 bucket. Defaults to the \code{AWS_SECRET_ACCESS_KEY} environment
 #'   variable.
 #' @param cache The local folder to use as a cache, defaults to \code{board_cache_path()}.
+#' @param host The host to use for storage, defaults to \code{"s3.amazonaws.com"}.
 #' @param ... Additional parameters required to initialize a particular board.
 #'
 #' @details
@@ -235,6 +246,7 @@ board_register_s3 <- function(name = "s3",
                               key = Sys.getenv("AWS_ACCESS_KEY_ID"),
                               secret = Sys.getenv("AWS_SECRET_ACCESS_KEY"),
                               cache = board_cache_path(),
+                              host = "s3.amazonaws.com",
                               ...) {
   board_register("s3",
                  name = name,
@@ -325,5 +337,55 @@ board_register_gcloud <- function(name = "gcloud",
                  bucket = bucket,
                  token = token,
                  cache = cache,
+                 ...)
+}
+
+#' Register DigitalOcean Board
+#'
+#' Wrapper with explicit parameters over \code{board_register()} to
+#' register a DigitalOcean Spaces board.
+#'
+#' @param name Optional name for this board, defaults to 's3'.
+#' @param space The name of the DigitalOcean space. Defaults to the \code{DO_SPACE} environment
+#'   variable.
+#' @param key The key of the DigitalOcean space. Defaults to the \code{DO_ACCESS_KEY_ID} environment
+#'   variable.
+#' @param secret The secret of the DigitalOcean space. Defaults to the \code{DO_SECRET_ACCESS_KEY} environment
+#'   variable.
+#' @param datacenter The datacenter of the DigitalOcean space. Defaults to the \code{DO_DATACENTER} environment
+#'   variable.
+#' @param cache The local folder to use as a cache, defaults to \code{board_cache_path()}.
+#' @param host The host to use for storage, defaults to \code{"digitaloceanspaces.com"}.
+#' @param ... Additional parameters required to initialize a particular board.
+#'
+#' @details
+#'
+#' This function requires a DigitalOcean space to be manually created; otherwise,
+#' registering a DigitalOcean space will fail.
+#'
+#' @seealso board_register
+#'
+#' @examples
+#' \dontrun{
+#' # the following example requires a DigitalOcean Spaces API key
+#' board_register_s3(bucket = "s3bucket")
+#' }
+#' @export
+board_register_dospace <- function(name = "dospace",
+                                   space = Sys.getenv("DO_SPACE"),
+                                   key = Sys.getenv("DO_ACCESS_KEY_ID"),
+                                   secret = Sys.getenv("DO_SECRET_ACCESS_KEY"),
+                                   datacenter = Sys.getenv("DO_DATACENTER"),
+                                   cache = board_cache_path(),
+                                   host = "digitaloceanspaces.com",
+                                   ...) {
+  board_register("dospace",
+                 name = name,
+                 space = space,
+                 key = key,
+                 secret = secret,
+                 datacenter = datacenter,
+                 cache = cache,
+                 host = host,
                  ...)
 }
